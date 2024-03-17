@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display EDI Message</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>EDI Message:</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Segment</th>
+                <th>Elements</th>
+            </tr>
+        </thead>
+        <tbody id="edi-table-body">
+            <!-- Table content will be added dynamically using JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        // Function to fetch EDI message from localhost server
+        function fetchEDI() {
+            fetch('http://localhost:8000/edi')
+                .then(response => response.text())
+                .then(data => parseAndDisplayEDI(data))
+                .catch(error => console.error('Error fetching EDI message:', error));
+        }
+
+        // Function to parse EDI message and display in table
+        function parseAndDisplayEDI(ediMessage) {
+            const segments = ediMessage.split('~');
+            const tableBody = document.getElementById('edi-table-body');
+
+            segments.forEach(segment => {
+                const [segmentName, ...elements] = segment.split('*');
+                const elementString = elements.join(', ');
+
+                const row = document.createElement('tr');
+                const segmentCell = document.createElement('td');
+                const elementCell = document.createElement('td');
+
+                segmentCell.textContent = segmentName;
+                elementCell.textContent = elementString;
+
+                row.appendChild(segmentCell);
+                row.appendChild(elementCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Call fetchEDI function when the page loads
+        window.onload = fetchEDI;
+    </script>
+</body>
+
+</html>

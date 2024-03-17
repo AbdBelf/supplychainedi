@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display EDI Message</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>EDI Message:</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Segment</th>
+                <th>Description (English)</th>
+                <th>Description (French)</th>
+                <th>Elements</th>
+            </tr>
+        </thead>
+        <tbody id="edi-table-body">
+            <!-- Table content will be added dynamically using JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        // Function to fetch EDI message from localhost server
+        function fetchEDI() {
+            fetch('http://localhost:8000/edi') // Fetch EDI message from the server
+                .then(response => response.text())
+                .then(data => parseAndDisplayEDI(data))
+                .catch(error => console.error('Error fetching EDI message:', error));
+        }
+
+        // Function to parse EDI message and display in table
+        function parseAndDisplayEDI(ediMessage) {
+            const segments = ediMessage.split('~'); // Split EDI message into segments
+            const tableBody = document.getElementById('edi-table-body');
+
+            segments.forEach(segment => {
+                const [segmentName, ...elements] = segment.split('*'); // Split segment into elements
+                const elementString = elements.join(', ');
+
+                // Create table row
+                const row = document.createElement('tr');
+                const segmentCell = document.createElement('td');
+                const descriptionENCell = document.createElement('td'); // New cell for English segment description
+                const descriptionFRCell = document.createElement('td'); // New cell for French segment description
+                const elementCell = document.createElement('td');
+
+                // Set segment name
+                segmentCell.textContent = segmentName;
+
+                // Set segment descriptions
+                const descriptions = getSegmentDescriptions(segmentName);
+                descriptionENCell.textContent = descriptions[0]; // English description
+                descriptionFRCell.textContent = descriptions[1]; // French description
+
+                // Set elements
+                elementCell.textContent = elementString;
+
+                // Append cells to row
+                row.appendChild(segmentCell);
+                row.appendChild(descriptionENCell);
+                row.appendChild(descriptionFRCell);
+                row.appendChild(elementCell);
+
+                // Append row to table body
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Call fetchEDI function when the page loads
+        window.onload = fetchEDI;
+
+        // Function to get segment descriptions
+        function getSegmentDescriptions(segmentName) {
+            switch (segmentName.trim().toUpperCase()) { // Ensure uppercase comparison and trim any leading/trailing whitespace
+                case 'ISA':
+                    return ['Interchange Control Header', 'En-tête de contrôle d\'échange'];
+                case 'GS':
+                    return ['Functional Group Header', 'En-tête de groupe fonctionnel'];
+                case 'ST':
+                    return ['Transaction Set Header', 'En-tête de jeu de transactions'];
+                case 'BEG':
+                    return ['Beginning Segment for Purchase Order', 'Segment de début de commande d\'achat'];
+                case 'TD5':
+                    return ['Carrier Details (Routing Sequence/Transit Time)', 'Détails du transporteur (Séquence de routage/temps de transit)'];
+                case 'N1':
+                    return ['Name', 'Nom'];
+                case 'PO1':
+                    return ['Baseline Item Data', 'Données de l\'article de base'];
+                case 'CTT':
+                    return ['Transaction Totals', 'Totals de transaction'];
+                case 'SE':
+                    return ['Transaction Set Trailer', 'Remorque du jeu de transactions'];
+                case 'GE':
+                    return ['Functional Group Trailer', 'Remorque de groupe fonctionnel'];
+                case 'IEA':
+                    return ['Interchange Control Trailer', 'Remorque de contrôle d\'échange'];
+                default:
+                    return ['', ''];
+            }
+        }
+    </script>
+
+    <!-- Description du message EDI en français -->
+    <p>Ce message EDI représente une transaction d'achat entre un expéditeur (identifié par "SENDERID") et un
+        destinataire (identifié par "RECEIVERID"). Il débute par un en-tête de contrôle d'échange (ISA) qui comprend des
+        informations sur l'échange EDI, telles que la date et l'heure, ainsi que les identifiants de l'expéditeur et du
+        destinataire. Ensuite, le segment GS spécifie le type de transaction (dans ce cas, une commande d'achat), ainsi
+        que les identifiants du groupe fonctionnel.
+
+        Le segment ST marque le début de l'ensemble de transactions et identifie le type spécifique de transaction, en
+        l'occurrence une commande d'achat (850). Les segments suivants détaillent la commande, notamment le numéro de
+        référence, la date, les informations sur le transporteur (UPS3), le nom du fournisseur ("BigSupplier"), les
+        détails de l'article (quantité, prix unitaire, numéro d'article), ainsi que les totaux de transaction.
+
+        Finalement, les segments SE, GE et IEA signalent respectivement la fin de l'ensemble de transactions, du groupe
+        fonctionnel et du contrôle d'échange, garantissant ainsi l'intégrité et la traçabilité de la transaction d'achat
+        via le format EDI.
+
+
+
+
+    </p>
+</body>
+
+</html>
